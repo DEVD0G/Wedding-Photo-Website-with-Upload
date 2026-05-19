@@ -135,6 +135,18 @@ npm run build      # erzeugt Prisma-Client + optimierten Build
 npm run start      # startet den Produktionsserver
 ```
 
+### Updates einspielen
+
+Nach Code-Änderungen genügt das mitgelieferte Rebuild-Skript – es holt
+die neuesten Änderungen, aktualisiert Abhängigkeiten und Datenbank,
+erstellt einen frischen Build und startet den Dienst neu:
+
+```bash
+./rebuild.sh                 # Pull + Build + Neustart
+./rebuild.sh --no-pull       # nur lokalen Stand neu bauen
+./rebuild.sh --no-restart    # bauen, aber Dienst nicht neu starten
+```
+
 Empfehlungen für den Livebetrieb:
 
 - `SESSION_SECRET` und `ADMIN_PASSWORD` auf sichere, lange Werte setzen
