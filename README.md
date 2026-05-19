@@ -77,6 +77,23 @@ vom Hochzeitstag hoch und teilen sie in einer eleganten Galerie.
 
 ## Installation
 
+### Schnellinstallation (Ubuntu 24.04)
+
+Das beiliegende Skript installiert **alle erforderlichen Komponenten**
+(Node.js 20, Git, Abhängigkeiten), erstellt die `.env` inkl. sicherer
+Schlüssel, richtet die Datenbank ein, erzeugt den Produktions-Build und
+legt auf Wunsch einen `systemd`-Dienst für den Autostart an:
+
+```bash
+chmod +x install.sh
+./install.sh            # interaktiv
+./install.sh --yes      # ohne Rückfragen, mit Standardwerten
+```
+
+Das erzeugte Admin-Passwort wird am Ende angezeigt und steht in der `.env`.
+
+### Manuelle Installation
+
 Voraussetzung: **Node.js 18.17+** (oder 20+).
 
 ```bash
