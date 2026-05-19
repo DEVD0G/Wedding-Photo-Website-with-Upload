@@ -3,20 +3,37 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --ring: 198 162 75;
+  html {
+    -webkit-tap-highlight-color: transparent;
   }
 
-  html {
-    scroll-behavior: smooth;
-    -webkit-tap-highlight-color: transparent;
+  /* ---- Lenis (Smooth Scroll) ---- */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  /* ---- Sperre waehrend des cinematischen Intros ---- */
+  html.pm-intro-lock,
+  html.pm-intro-lock body {
+    overflow: hidden;
+    height: 100%;
   }
 
   body {
     @apply bg-cream text-ink font-body antialiased;
     background-image:
       radial-gradient(60rem 60rem at 12% -8%, rgba(239, 208, 203, 0.45), transparent 60%),
-      radial-gradient(50rem 50rem at 110% 8%, rgba(230, 216, 191, 0.55), transparent 55%),
+      radial-gradient(50rem 50rem at 110% 8%, rgba(234, 216, 182, 0.55), transparent 55%),
       radial-gradient(70rem 70rem at 50% 120%, rgba(239, 208, 203, 0.3), transparent 60%);
     background-attachment: fixed;
     min-height: 100vh;
@@ -30,7 +47,6 @@
     background: rgba(221, 162, 158, 0.4);
   }
 
-  /* zarter Scrollbalken */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -55,23 +71,29 @@
   }
   .btn-gold {
     @apply btn bg-gradient-to-br from-gold to-golddeep text-ivory shadow-soft
-           hover:-translate-y-0.5 hover:shadow-glow active:translate-y-0;
+           hover:shadow-glow;
   }
   .btn-rose {
     @apply btn bg-gradient-to-br from-rose to-rosedeep text-ivory shadow-soft
-           hover:-translate-y-0.5 hover:shadow-card active:translate-y-0;
+           hover:shadow-card;
   }
   .btn-outline {
     @apply btn border border-gold/50 bg-ivory/70 text-cocoa backdrop-blur
-           hover:-translate-y-0.5 hover:border-gold hover:text-ink hover:shadow-soft;
+           hover:border-gold hover:text-ink hover:shadow-soft;
   }
   .btn-ghost {
     @apply btn text-cocoa hover:bg-sand/70 hover:text-ink;
   }
 
-  /* ---------- Karten ---------- */
+  /* ---------- Karten & Glas ---------- */
   .card {
     @apply rounded-4xl border border-white/60 bg-ivory/80 shadow-soft backdrop-blur-sm;
+  }
+  .glass {
+    @apply border border-white/55 bg-white/45 shadow-soft backdrop-blur-xl;
+  }
+  .glass-dark {
+    @apply border border-white/12 bg-noir/55 shadow-card backdrop-blur-xl;
   }
 
   /* ---------- Formularfelder ---------- */
@@ -84,7 +106,7 @@
     @apply mb-1.5 block text-sm font-medium text-cocoa;
   }
 
-  /* ---------- Chips / Tags ---------- */
+  /* ---------- Chips ---------- */
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-gold/30
            bg-ivory/80 px-3.5 py-1.5 text-xs font-medium tracking-wide text-cocoa
@@ -94,7 +116,7 @@
     @apply border-transparent bg-gradient-to-br from-gold to-golddeep text-ivory shadow-soft;
   }
 
-  /* ---------- Ueberschriften-Schmuck ---------- */
+  /* ---------- Schmuck ---------- */
   .eyebrow {
     @apply font-body text-xs uppercase tracking-wider2 text-gold;
   }
@@ -107,7 +129,12 @@
   .text-balance {
     text-wrap: balance;
   }
-  /* Lade-Schimmer fuer Platzhalter */
+  .text-gold-gradient {
+    background: linear-gradient(120deg, #d8b86a 0%, #a6802e 45%, #d8b86a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
   .shimmer {
     background: linear-gradient(
       100deg,
@@ -117,5 +144,24 @@
     );
     background-size: 960px 100%;
     @apply animate-shimmer;
+  }
+  /* Ken-Burns fuer die Slideshow */
+  .ken-burns {
+    animation: kenburns 12s ease-out both;
+  }
+  .perspective {
+    perspective: 1200px;
+  }
+}
+
+/* ---- Bewegungsreduzierung respektieren ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -8,6 +8,7 @@ const config: Config = {
         cream: "#FBF6EC",
         ivory: "#FFFDF8",
         sand: "#F2E8D7",
+        champagne: "#EAD8B6",
         beige: "#E6D8BF",
         blush: "#EFD0CB",
         rose: "#DDA29E",
@@ -17,6 +18,8 @@ const config: Config = {
         ink: "#43392F",
         cocoa: "#6E5D4C",
         muted: "#9C8B78",
+        noir: "#241E1A",
+        espresso: "#352C25",
       },
       fontFamily: {
         display: ["var(--font-display)", "Cormorant Garamond", "serif"],
@@ -27,10 +30,12 @@ const config: Config = {
         soft: "0 12px 38px -16px rgba(67,57,47,0.25)",
         card: "0 22px 60px -26px rgba(67,57,47,0.32)",
         glow: "0 0 0 1px rgba(198,162,75,0.28), 0 26px 60px -28px rgba(198,162,75,0.5)",
+        lift: "0 36px 80px -30px rgba(67,57,47,0.45)",
       },
       borderRadius: {
         xl2: "1.75rem",
         "4xl": "2.5rem",
+        "5xl": "3rem",
       },
       letterSpacing: {
         widish: "0.18em",
@@ -67,6 +72,14 @@ const config: Config = {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
         },
+        kenburns: {
+          "0%": { transform: "scale(1) translate3d(0,0,0)" },
+          "100%": { transform: "scale(1.12) translate3d(-1.5%,-1.5%,0)" },
+        },
+        sheen: {
+          "0%": { transform: "translateX(-120%) skewX(-18deg)" },
+          "100%": { transform: "translateX(220%) skewX(-18deg)" },
+        },
       },
       animation: {
         "fade-up": "fadeUp 0.7s cubic-bezier(0.2,0.7,0.2,1) both",
@@ -76,6 +89,8 @@ const config: Config = {
         "heart-pop": "heartPop 0.5s ease-out",
         shimmer: "shimmer 1.6s linear infinite",
         "spin-slow": "spinSlow 9s linear infinite",
+        kenburns: "kenburns 12s ease-out both",
+        sheen: "sheen 1.1s ease-in-out",
       },
     },
   },

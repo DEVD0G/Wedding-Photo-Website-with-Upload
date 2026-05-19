@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { serializeGuestbook } from "@/lib/media";
-import { GuestbookClient } from "@/components/GuestbookClient";
-import { FloralDivider } from "@/components/FloralDivider";
+import { GuestbookWall } from "@/components/GuestbookWall";
+import { AnimatedSectionTitle } from "@/components/animation/AnimatedSectionTitle";
 
 export const dynamic = "force-dynamic";
 
@@ -17,20 +17,15 @@ export default async function GuestbookPage() {
   const entries = rows.map(serializeGuestbook);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12">
-      <div className="text-center">
-        <p className="eyebrow">Worte, die bleiben</p>
-        <h1 className="mt-2 font-display text-4xl text-ink sm:text-5xl">
-          Unser Gästebuch
-        </h1>
-        <p className="mx-auto mt-3 max-w-lg text-cocoa">
-          Eure Glückwünsche begleiten uns auf unserem gemeinsamen Weg.
-        </p>
-        <FloralDivider className="mt-6" />
-      </div>
-
-      <div className="mt-10">
-        <GuestbookClient initialEntries={entries} />
+    <div className="mx-auto max-w-6xl px-5 py-16">
+      <AnimatedSectionTitle
+        eyebrow="Worte, die bleiben"
+        title="Unser Gästebuch"
+        script="für die Ewigkeit"
+        subtitle="Eure Glückwünsche begleiten uns auf unserem gemeinsamen Weg."
+      />
+      <div className="mt-12">
+        <GuestbookWall initialEntries={entries} />
       </div>
     </div>
   );

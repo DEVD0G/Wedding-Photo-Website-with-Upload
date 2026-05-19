@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { SlideshowClient } from "@/components/SlideshowClient";
+import { SlideshowMode } from "@/components/SlideshowMode";
+import { AnimatedSectionTitle } from "@/components/animation/AnimatedSectionTitle";
 import { getVisibleMedia, getVisitorId } from "@/lib/media";
 
 export const dynamic = "force-dynamic";
@@ -12,20 +13,14 @@ export default async function SlideshowPage() {
   const media = await getVisibleMedia(getVisitorId());
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12">
-      <div className="text-center">
-        <p className="eyebrow">Für Beamer & Fernseher</p>
-        <h1 className="mt-2 font-display text-4xl text-ink sm:text-5xl">
-          Slideshow
-        </h1>
-        <p className="mx-auto mt-3 max-w-lg text-cocoa">
-          Lehn dich zurück und lass alle Momente in Ruhe an dir vorüberziehen.
-          Mit dem Vollbild-Knopf wird daraus die perfekte Feier-Diashow.
-        </p>
-      </div>
-
-      <div className="mt-8">
-        <SlideshowClient items={media} />
+    <div className="mx-auto max-w-6xl px-5 py-16">
+      <AnimatedSectionTitle
+        eyebrow="Für Beamer & Fernseher"
+        title="Cineastische Slideshow"
+        subtitle="Lehn dich zurück und lass alle Momente mit weichen Ken-Burns-Übergängen an dir vorüberziehen. Mit dem Vollbild-Knopf wird daraus die perfekte Feier-Diashow."
+      />
+      <div className="mt-10">
+        <SlideshowMode items={media} />
       </div>
     </div>
   );
