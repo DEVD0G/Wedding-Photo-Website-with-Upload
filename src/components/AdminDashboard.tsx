@@ -10,39 +10,54 @@ import {
   Film,
   Heart,
   Image as ImageIcon,
+  Link2,
   LogOut,
   MessageCircle,
+  Pencil,
   Printer,
   QrCode,
+  Save,
   Trash2,
+  UserPlus,
+  X,
 } from "lucide-react";
-import type { CommentItem, GuestbookItem, MediaItem } from "@/lib/types";
+import type {
+  CommentItem,
+  GuestbookItem,
+  MediaItem,
+  TeamInviteItem,
+} from "@/lib/types";
 import { formatBytes, formatDateTime } from "@/lib/format";
 
 interface Props {
   initialMedia: MediaItem[];
   initialGuestbook: GuestbookItem[];
+  initialInvites: TeamInviteItem[];
   qrDataUrl: string;
   siteUrl: string;
 }
 
-type Tab = "media" | "guestbook" | "tools";
+type Tab = "media" | "guestbook" | "team" | "tools";
 type MediaFilter = "all" | "visible" | "hidden" | "image" | "video";
 
 export function AdminDashboard({
   initialMedia,
   initialGuestbook,
+  initialInvites,
   qrDataUrl,
   siteUrl,
 }: Props) {
   const [tab, setTab] = useState<Tab>("media");
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [guestbook, setGuestbook] = useState<GuestbookItem[]>(initialGuestbook);
+  const [invites, setInvites] = useState<TeamInviteItem[]>(initialInvites);
   const [filter, setFilter] = useState<MediaFilter>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [comments, setComments] = useState<Record<string, CommentItem[]>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [inviteLabel, setInviteLabel] = useState("");
+  const [creatingInvite, setCreatingInvite] = useState(false);
 
   const stats = useMemo(() => {
     const visible = media.filter((m) => m.approved).length;
@@ -63,6 +78,8 @@ export function AdminDashboard({
       return true;
     });
   }, [media, filter]);
+
+  /* ---------- Foto-Aktionen ---------- */
 
   async function toggleApprove(item: MediaItem) {
     setBusy(item.id);
@@ -90,6 +107,37 @@ export function AdminDashboard({
       toast.error("Netzwerkfehler.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function saveEdit(
+    id: string,
+    guestName: string,
+    message: string,
+  ): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/admin/media/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guestName, message }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMedia((prev) =>
+          prev.map((m) =>
+            m.id === id
+              ? { ...m, guestName: data.guestName, message: data.message }
+              : m,
+          ),
+        );
+        toast.success("Änderungen gespeichert.");
+        return true;
+      }
+      toast.error(data.error || "Speichern fehlgeschlagen.");
+      return false;
+    } catch {
+      toast.error("Netzwerkfehler.");
+      return false;
     }
   }
 
@@ -152,6 +200,8 @@ export function AdminDashboard({
     }
   }
 
+  /* ---------- Gästebuch ---------- */
+
   async function deleteGuestbook(id: string) {
     if (!confirm("Diesen Gästebuch-Eintrag löschen?")) return;
     setBusy(id);
@@ -166,6 +216,52 @@ export function AdminDashboard({
     } finally {
       setBusy(null);
     }
+  }
+
+  /* ---------- Team ---------- */
+
+  async function createInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setCreatingInvite(true);
+    try {
+      const res = await fetch("/api/admin/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: inviteLabel.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.invite) {
+        setInvites((prev) => [data.invite, ...prev]);
+        setInviteLabel("");
+        toast.success("Einladung erstellt – jetzt den Link teilen.");
+      } else {
+        toast.error(data.error || "Einladung konnte nicht erstellt werden.");
+      }
+    } catch {
+      toast.error("Netzwerkfehler.");
+    } finally {
+      setCreatingInvite(false);
+    }
+  }
+
+  async function revokeInvite(id: string) {
+    if (!confirm("Diese Einladung zurückziehen? Der Link wird ungültig.")) {
+      return;
+    }
+    setBusy(id);
+    try {
+      const res = await fetch(`/api/admin/team/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setInvites((prev) => prev.filter((i) => i.id !== id));
+        toast.success("Einladung zurückgezogen.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function copyText(text: string, message: string) {
+    navigator.clipboard?.writeText(text).then(() => toast.success(message));
   }
 
   async function logout() {
@@ -217,6 +313,7 @@ export function AdminDashboard({
           [
             ["media", "Foto-Verwaltung"],
             ["guestbook", "Gästebuch"],
+            ["team", "Team"],
             ["tools", "QR-Code & Export"],
           ] as [Tab, string][]
         ).map(([key, label]) => (
@@ -234,13 +331,11 @@ export function AdminDashboard({
       {tab === "media" && (
         <div className="mt-6">
           <p className="rounded-2xl bg-cream/70 p-4 text-sm text-cocoa">
-            Hier steuerst du, <strong>welche Fotos und Videos auf der
-            öffentlichen Seite erscheinen</strong>. Grün markierte Medien sind
-            für alle Gäste in Galerie und Slideshow sichtbar – verborgene
-            Medien sieht nur das Brautpaar.
+            Hier <strong>verwaltest und bearbeitest</strong> du alle Fotos und
+            Videos. Grün markierte Medien sind öffentlich sichtbar. Über
+            „Bearbeiten“ lassen sich Gastname und Nachricht anpassen.
           </p>
 
-          {/* Filter */}
           <div className="mt-5 flex flex-wrap gap-2">
             {filterTabs.map(([key, label, count]) => (
               <button
@@ -270,6 +365,7 @@ export function AdminDashboard({
                   onDelete={() => deleteMedia(item)}
                   onToggleComments={() => loadComments(item.id)}
                   onDeleteComment={(cid) => deleteComment(item.id, cid)}
+                  onSaveEdit={(name, msg) => saveEdit(item.id, name, msg)}
                 />
               ))}
             </div>
@@ -309,6 +405,92 @@ export function AdminDashboard({
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ---------- Team ---------- */}
+      {tab === "team" && (
+        <div className="mt-6">
+          <p className="rounded-2xl bg-cream/70 p-4 text-sm text-cocoa">
+            Lade <strong>Teammitglieder</strong> ein, die euch beim Verwalten
+            der Galerie helfen. Jede Einladung erzeugt einen persönlichen Link –
+            wer ihn öffnet, erhält Zugriff auf diesen Admin-Bereich. Einladungen
+            lassen sich jederzeit zurückziehen.
+          </p>
+
+          <form
+            onSubmit={createInvite}
+            className="card mt-5 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
+          >
+            <div className="flex-1">
+              <label className="label" htmlFor="invite-label">
+                Name des Teammitglieds <span className="text-muted">(optional)</span>
+              </label>
+              <input
+                id="invite-label"
+                type="text"
+                className="field"
+                placeholder="z. B. Trauzeugin Anna"
+                value={inviteLabel}
+                maxLength={80}
+                onChange={(e) => setInviteLabel(e.target.value)}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={creatingInvite}
+              className="btn-gold shrink-0"
+            >
+              <UserPlus size={16} />
+              {creatingInvite ? "Wird erstellt …" : "Einladung erstellen"}
+            </button>
+          </form>
+
+          <div className="mt-5 space-y-3">
+            {invites.length === 0 && (
+              <p className="card p-8 text-center text-cocoa">
+                Noch keine Einladungen erstellt.
+              </p>
+            )}
+            {invites.map((invite) => (
+              <div key={invite.id} className="card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-display text-lg text-ink">
+                      {invite.label || "Teammitglied"}
+                    </p>
+                    <p className="text-xs text-muted">
+                      Erstellt am {formatDateTime(invite.createdAt)} ·{" "}
+                      {invite.useCount}× verwendet
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => revokeInvite(invite.id)}
+                    disabled={busy === invite.id}
+                    className="btn shrink-0 px-3 py-2 text-xs text-rosedeep hover:bg-rosedeep/10"
+                  >
+                    <Trash2 size={14} />
+                    Zurückziehen
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center gap-2 rounded-2xl bg-cream/70 p-2.5">
+                  <Link2 size={15} className="shrink-0 text-gold" />
+                  <span className="min-w-0 flex-1 truncate text-xs text-cocoa">
+                    {invite.link}
+                  </span>
+                  <button
+                    onClick={() =>
+                      copyText(invite.link, "Einladungslink kopiert.")
+                    }
+                    className="btn-outline shrink-0 px-3 py-1.5 text-xs"
+                  >
+                    <Copy size={13} />
+                    Kopieren
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -411,6 +593,7 @@ function MediaAdminCard({
   onDelete,
   onToggleComments,
   onDeleteComment,
+  onSaveEdit,
 }: {
   item: MediaItem;
   busy: boolean;
@@ -420,8 +603,26 @@ function MediaAdminCard({
   onDelete: () => void;
   onToggleComments: () => void;
   onDeleteComment: (commentId: string) => void;
+  onSaveEdit: (guestName: string, message: string) => Promise<boolean>;
 }) {
   const fileUrl = `/api/media/${item.id}/file`;
+  const [editing, setEditing] = useState(false);
+  const [guestName, setGuestName] = useState(item.guestName ?? "");
+  const [message, setMessage] = useState(item.message ?? "");
+  const [saving, setSaving] = useState(false);
+
+  function startEdit() {
+    setGuestName(item.guestName ?? "");
+    setMessage(item.message ?? "");
+    setEditing(true);
+  }
+
+  async function save() {
+    setSaving(true);
+    const ok = await onSaveEdit(guestName.trim(), message.trim());
+    setSaving(false);
+    if (ok) setEditing(false);
+  }
 
   return (
     <div className="card overflow-hidden">
@@ -448,13 +649,11 @@ function MediaAdminCard({
           />
         )}
 
-        {/* Typ-Badge */}
         <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-noir/65 px-2.5 py-1 text-[11px] font-medium text-ivory backdrop-blur">
           {item.type === "video" ? <Film size={11} /> : <ImageIcon size={11} />}
           {item.type === "video" ? "Video" : "Foto"}
         </span>
 
-        {/* Sichtbarkeits-Status */}
         <span
           className={`absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-soft ${
             item.approved
@@ -467,62 +666,114 @@ function MediaAdminCard({
         </span>
       </div>
 
-      {/* Infos */}
+      {/* Infos / Bearbeiten */}
       <div className="p-4">
-        <p className="font-display text-lg text-ink">
-          {item.guestName || "Unbekannter Gast"}
-        </p>
-        <p className="text-xs text-muted">
-          {formatDateTime(item.createdAt)} · {formatBytes(item.size)}
-        </p>
-        <div className="mt-1.5 flex items-center gap-3 text-xs text-cocoa">
-          <span className="flex items-center gap-1">
-            <Heart size={12} className="text-rose" fill="currentColor" />
-            {item.likeCount}
-          </span>
-          <span className="flex items-center gap-1">
-            <MessageCircle size={12} /> {item.commentCount}
-          </span>
-        </div>
-        {item.message && (
-          <p className="mt-2 line-clamp-2 text-sm italic text-cocoa">
-            „{item.message}“
-          </p>
-        )}
+        {editing ? (
+          <div className="space-y-2.5">
+            <div>
+              <label className="label">Gastname</label>
+              <input
+                type="text"
+                className="field"
+                value={guestName}
+                maxLength={80}
+                placeholder="Name des Gastes"
+                onChange={(e) => setGuestName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="label">Nachricht</label>
+              <textarea
+                className="field min-h-[70px] resize-y"
+                value={message}
+                maxLength={400}
+                placeholder="Nachricht zum Medium"
+                onChange={(e) => setMessage(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={save}
+                disabled={saving}
+                className="btn-gold flex-1 px-3 py-2 text-xs"
+              >
+                <Save size={14} />
+                {saving ? "Speichert …" : "Speichern"}
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                disabled={saving}
+                className="btn-outline px-3 py-2 text-xs"
+              >
+                <X size={14} />
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="font-display text-lg text-ink">
+              {item.guestName || "Unbekannter Gast"}
+            </p>
+            <p className="text-xs text-muted">
+              {formatDateTime(item.createdAt)} · {formatBytes(item.size)}
+            </p>
+            <div className="mt-1.5 flex items-center gap-3 text-xs text-cocoa">
+              <span className="flex items-center gap-1">
+                <Heart size={12} className="text-rose" fill="currentColor" />
+                {item.likeCount}
+              </span>
+              <span className="flex items-center gap-1">
+                <MessageCircle size={12} /> {item.commentCount}
+              </span>
+            </div>
+            {item.message && (
+              <p className="mt-2 line-clamp-2 text-sm italic text-cocoa">
+                „{item.message}“
+              </p>
+            )}
 
-        {/* Aktionen */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            onClick={onToggle}
-            disabled={busy}
-            className={`btn px-3.5 py-2 text-xs ${
-              item.approved
-                ? "border border-beige text-cocoa hover:bg-sand/70"
-                : "bg-gradient-to-br from-gold to-golddeep text-ivory shadow-soft"
-            }`}
-          >
-            {item.approved ? <EyeOff size={14} /> : <Eye size={14} />}
-            {item.approved ? "Von der Seite nehmen" : "Auf der Seite zeigen"}
-          </button>
-          <button
-            onClick={onToggleComments}
-            className="btn-ghost px-3 py-2 text-xs"
-          >
-            <MessageCircle size={14} />
-            {item.commentCount}
-          </button>
-          <button
-            onClick={onDelete}
-            disabled={busy}
-            className="btn px-3 py-2 text-xs text-rosedeep hover:bg-rosedeep/10"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={onToggle}
+                disabled={busy}
+                className={`btn px-3.5 py-2 text-xs ${
+                  item.approved
+                    ? "border border-beige text-cocoa hover:bg-sand/70"
+                    : "bg-gradient-to-br from-gold to-golddeep text-ivory shadow-soft"
+                }`}
+              >
+                {item.approved ? <EyeOff size={14} /> : <Eye size={14} />}
+                {item.approved ? "Verbergen" : "Anzeigen"}
+              </button>
+              <button
+                onClick={startEdit}
+                className="btn-outline px-3 py-2 text-xs"
+              >
+                <Pencil size={13} />
+                Bearbeiten
+              </button>
+              <button
+                onClick={onToggleComments}
+                className="btn-ghost px-3 py-2 text-xs"
+              >
+                <MessageCircle size={14} />
+                {item.commentCount}
+              </button>
+              <button
+                onClick={onDelete}
+                disabled={busy}
+                className="btn px-3 py-2 text-xs text-rosedeep hover:bg-rosedeep/10"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Kommentare */}
-      {expanded && (
+      {expanded && !editing && (
         <div className="border-t border-beige bg-cream/60 p-4">
           {!comments && <p className="text-sm text-muted">Wird geladen …</p>}
           {comments?.length === 0 && (

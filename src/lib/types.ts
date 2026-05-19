@@ -28,3 +28,13 @@ export interface GuestbookItem {
   message: string;
   createdAt: string;
 }
+
+export interface TeamInviteItem {
+  id: string;
+  label: string | null;
+  revoked: boolean;
+  useCount: number;
+  lastUsedAt: string | null;
+  createdAt: string;
+  link: string;
+}

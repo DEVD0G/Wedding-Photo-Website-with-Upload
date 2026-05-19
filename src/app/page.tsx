@@ -5,7 +5,6 @@ import { getVisibleMedia, getVisitorId, serializeGuestbook } from "@/lib/media";
 import { AnimatedHero } from "@/components/home/AnimatedHero";
 import { ScrollStorySection } from "@/components/home/ScrollStorySection";
 import { HorizontalMoments } from "@/components/home/HorizontalMoments";
-import { WeddingTimeline } from "@/components/home/WeddingTimeline";
 import { AnimatedSectionTitle } from "@/components/animation/AnimatedSectionTitle";
 import { AnimatedFloralLine } from "@/components/animation/AnimatedFloralLine";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
@@ -80,21 +79,6 @@ export default async function HomePage() {
 
       {/* ---------- Horizontale Momente ---------- */}
       <HorizontalMoments />
-
-      {/* ---------- Timeline ---------- */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-6xl px-5">
-          <AnimatedSectionTitle
-            eyebrow="Der Ablauf"
-            title="Unser Hochzeitstag"
-            script="von früh bis spät"
-            subtitle="Sechs Kapitel eines unvergesslichen Tages – scrolle hindurch und erlebe ihn noch einmal."
-          />
-          <div className="mt-14">
-            <WeddingTimeline />
-          </div>
-        </div>
-      </section>
 
       {/* ---------- Upload-CTA ---------- */}
       <section className="relative py-20" id="upload">
