@@ -124,9 +124,12 @@ Die Seite ist anschließend unter <http://localhost:3000> erreichbar.
 | `UPLOAD_DIR`               | Ordner für hochgeladene Medien (Standard: `./uploads`)                |
 | `MAX_FILE_SIZE_MB`         | Maximale Dateigröße pro Datei in MB                                   |
 | `REQUIRE_APPROVAL`         | `true` = Uploads müssen vom Admin freigegeben werden                  |
-| `NEXT_PUBLIC_SITE_URL`     | Öffentliche Basis-URL (für den QR-Code)                               |
-| `NEXT_PUBLIC_COUPLE_NAMES` | Namen des Brautpaars                                                  |
-| `NEXT_PUBLIC_WEDDING_DATE` | Hochzeitsdatum (optional, frei formatierbar)                          |
+| `NEXT_PUBLIC_SITE_URL`        | Öffentliche Basis-URL (für den QR-Code)                            |
+| `NEXT_PUBLIC_COUPLE_NAMES`    | Namen des Brautpaars                                               |
+| `NEXT_PUBLIC_WEDDING_DATE`    | Hochzeitsdatum als Anzeigetext                                     |
+| `NEXT_PUBLIC_WEDDING_DATE_ISO`| Hochzeitsdatum (JJJJ-MM-TT) für Countdowns                         |
+| `NEXT_PUBLIC_WEDDING_LOCATION`| Ort der Hochzeit (optional)                                        |
+| `NEXT_PUBLIC_MUSIC_URL`       | Pfad zum Hintergrund-Lied (Audiodatei in `public/` ablegen)        |
 
 ## Produktivbetrieb
 
