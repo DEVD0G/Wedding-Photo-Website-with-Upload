@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SmoothScroll } from "@/components/animation/SmoothScroll";
 import { GoldParticlesBackground } from "@/components/animation/GoldParticlesBackground";
-import { CinematicIntro } from "@/components/film/CinematicIntro";
+import { CinematicLoader } from "@/components/film/CinematicLoader";
 import { MusicController } from "@/components/film/MusicController";
 import { ScrollProgress } from "@/components/film/ScrollProgress";
 import { FilmGrainOverlay } from "@/components/film/FilmGrainOverlay";
@@ -60,7 +60,7 @@ export default function RootLayout({
       className={`${display.variable} ${body.variable} ${script.variable}`}
     >
       <body className="font-body">
-        <CinematicIntro />
+        <CinematicLoader />
         <SmoothScroll />
         <ScrollProgress />
         <GoldParticlesBackground />
