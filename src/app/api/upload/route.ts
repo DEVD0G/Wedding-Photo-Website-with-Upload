@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import { prisma } from "@/lib/db";
-import { saveMediaFile } from "@/lib/storage";
+import { isAdmin } from "@/lib/auth";
+import { saveMediaFile, getUploadDir } from "@/lib/storage";
 import { detectFileType, sanitizeText } from "@/lib/validation";
 import { maxFileSize, maxFileSizeMb, requireApproval } from "@/lib/config";
 
@@ -10,14 +13,76 @@ export const dynamic = "force-dynamic";
 
 const MAX_FILES_PER_REQUEST = 30;
 
+function reason(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
+/**
+ * Diagnose-Endpunkt (nur Admin): prüft, ob das Upload-Verzeichnis
+ * beschreibbar ist und ob die Datenbank gelesen/geschrieben werden kann.
+ * Aufruf: im Browser /api/upload öffnen (vorher unter /admin anmelden).
+ */
+export async function GET() {
+  if (!isAdmin()) {
+    return NextResponse.json(
+      { error: "Diese Diagnose ist nur für angemeldete Admins verfügbar." },
+      { status: 401 },
+    );
+  }
+
+  const checks: Record<string, string> = {};
+
+  // 1) Upload-Verzeichnis beschreibbar?
+  try {
+    const dir = getUploadDir();
+    const probe = path.join(dir, `.diag-${Date.now()}`);
+    await fs.promises.writeFile(probe, "ok");
+    await fs.promises.unlink(probe);
+    checks.uploadVerzeichnis = `OK – beschreibbar (${dir})`;
+  } catch (err) {
+    checks.uploadVerzeichnis = `FEHLER: ${reason(err)}`;
+  }
+
+  // 2) Datenbank lesen?
+  try {
+    const count = await prisma.media.count();
+    checks.datenbankLesen = `OK – ${count} Medien`;
+  } catch (err) {
+    checks.datenbankLesen = `FEHLER: ${reason(err)}`;
+  }
+
+  // 3) Datenbank schreiben? (Probe-Eintrag anlegen und sofort löschen)
+  try {
+    const probe = await prisma.guestbookEntry.create({
+      data: { name: "__diag__", message: "Schreibtest" },
+    });
+    await prisma.guestbookEntry.delete({ where: { id: probe.id } });
+    checks.datenbankSchreiben = "OK – beschreibbar";
+  } catch (err) {
+    checks.datenbankSchreiben = `FEHLER: ${reason(err)}`;
+  }
+
+  const ok = Object.values(checks).every((v) => v.startsWith("OK"));
+  return NextResponse.json({
+    status: ok ? "Alles in Ordnung" : "Es wurden Probleme gefunden",
+    checks,
+    hinweis:
+      "FEHLER bei 'uploadVerzeichnis' oder 'datenbankSchreiben' deuten auf " +
+      "fehlende Schreibrechte hin. Lösung: chown -R <dienst-user> auf den " +
+      "Projektordner (besonders 'uploads/' und 'prisma/').",
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     let form: FormData;
     try {
       form = await req.formData();
-    } catch {
+    } catch (err) {
+      console.error("[upload] formData() fehlgeschlagen:", err);
       return NextResponse.json(
-        { error: "Die Daten konnten nicht gelesen werden." },
+        { error: `Die Daten konnten nicht gelesen werden (${reason(err)}).` },
         { status: 400 },
       );
     }
@@ -47,13 +112,14 @@ export async function POST(req: NextRequest) {
     const errors: string[] = [];
 
     for (const file of files) {
+      const name = file?.name || "Datei";
       try {
         if (file.size === 0) {
-          errors.push(`„${file.name}“ ist leer und wurde übersprungen.`);
+          errors.push(`„${name}“ ist leer und wurde übersprungen.`);
           continue;
         }
         if (file.size > maxFileSize) {
-          errors.push(`„${file.name}“ ist zu groß (max. ${maxFileSizeMb} MB).`);
+          errors.push(`„${name}“ ist zu groß (max. ${maxFileSizeMb} MB).`);
           continue;
         }
 
@@ -61,7 +127,7 @@ export async function POST(req: NextRequest) {
         const detected = detectFileType(buffer);
         if (!detected) {
           errors.push(
-            `„${file.name}“ hat ein nicht unterstütztes Format und wurde abgelehnt.`,
+            `„${name}“ hat ein nicht unterstütztes Format und wurde abgelehnt.`,
           );
           continue;
         }
@@ -83,8 +149,10 @@ export async function POST(req: NextRequest) {
         });
         uploaded.push({ id: record.id, originalName: record.originalName });
       } catch (err) {
-        console.error("[upload] Datei-Fehler:", err);
-        errors.push(`„${file.name}“ konnte nicht gespeichert werden.`);
+        // Die echte Ursache wird mitgeliefert (z. B. Schreibrechte,
+        // Datenbank), damit Probleme ohne Server-Zugriff erkennbar sind.
+        console.error(`[upload] Datei-Fehler bei "${name}":`, err);
+        errors.push(`„${name}“ konnte nicht gespeichert werden: ${reason(err)}`);
       }
     }
 
@@ -101,13 +169,12 @@ export async function POST(req: NextRequest) {
       pendingApproval: requireApproval,
     });
   } catch (err) {
-    // Auffangnetz: jeder unerwartete Fehler wird als JSON gemeldet
-    // (statt einer undurchsichtigen 500-HTML-Seite) und protokolliert.
+    // Auffangnetz: die echte Fehlermeldung wird zurückgegeben.
     console.error("[upload] Unerwarteter Fehler:", err);
     return NextResponse.json(
       {
-        error:
-          "Beim Hochladen ist ein Serverfehler aufgetreten. Bitte versuche es erneut.",
+        error: `Serverfehler beim Hochladen: ${reason(err)}`,
+        detail: reason(err),
       },
       { status: 500 },
     );
