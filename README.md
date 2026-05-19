@@ -94,7 +94,7 @@ Das erzeugte Admin-Passwort wird am Ende angezeigt und steht in der `.env`.
 
 ### Manuelle Installation
 
-Voraussetzung: **Node.js 18.17+** (oder 20+).
+Voraussetzung: **Node.js 20+** (empfohlen: aktuelle LTS-Version).
 
 ```bash
 # 1. Abhängigkeiten installieren

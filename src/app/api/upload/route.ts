@@ -19,6 +19,20 @@ function reason(err: unknown): string {
 }
 
 /**
+ * Prüft per Duck-Typing, ob ein FormData-Eintrag eine hochgeladene Datei ist.
+ * Bewusst ohne `instanceof File`, da die globale `File`-Klasse erst ab
+ * Node.js 20 existiert – so funktioniert der Upload auch unter Node 18.
+ */
+function isUploadFile(value: FormDataEntryValue): value is File {
+  return (
+    typeof value !== "string" &&
+    value !== null &&
+    typeof (value as { arrayBuffer?: unknown }).arrayBuffer === "function" &&
+    typeof (value as { size?: unknown }).size === "number"
+  );
+}
+
+/**
  * Diagnose-Endpunkt (nur Admin): prüft, ob das Upload-Verzeichnis
  * beschreibbar ist und ob die Datenbank gelesen/geschrieben werden kann.
  * Aufruf: im Browser /api/upload öffnen (vorher unter /admin anmelden).
@@ -87,9 +101,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const files = form
-      .getAll("files")
-      .filter((f): f is File => f instanceof File);
+    const files = form.getAll("files").filter(isUploadFile);
     if (files.length === 0) {
       return NextResponse.json(
         { error: "Bitte wähle mindestens eine Datei aus." },

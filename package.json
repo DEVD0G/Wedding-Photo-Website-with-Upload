@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Petersen Memories – die persönliche Hochzeitsgalerie von Jessica & Leon Petersen.",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
