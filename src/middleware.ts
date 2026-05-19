@@ -38,6 +38,7 @@ export function middleware(req: NextRequest) {
     const exempt =
       pathname.startsWith("/willkommen") ||
       pathname.startsWith("/admin") ||
+      pathname.startsWith("/team-einladung") ||
       pathname.startsWith("/api");
     if (!exempt && !req.cookies.get("pm_guest")) {
       const url = req.nextUrl.clone();

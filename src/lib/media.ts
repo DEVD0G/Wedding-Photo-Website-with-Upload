@@ -1,7 +1,12 @@
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 import { VISITOR_COOKIE } from "./auth";
-import type { MediaItem, CommentItem, GuestbookItem } from "./types";
+import type {
+  MediaItem,
+  CommentItem,
+  GuestbookItem,
+  TeamInviteItem,
+} from "./types";
 
 /** Liest die anonyme Besucher-ID aus dem Cookie (von der Middleware gesetzt). */
 export function getVisitorId(): string {
@@ -88,5 +93,28 @@ export function serializeGuestbook(row: {
     name: row.name,
     message: row.message,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export function serializeInvite(
+  row: {
+    id: string;
+    token: string;
+    label: string | null;
+    revoked: boolean;
+    useCount: number;
+    lastUsedAt: Date | null;
+    createdAt: Date;
+  },
+  baseUrl: string,
+): TeamInviteItem {
+  return {
+    id: row.id,
+    label: row.label,
+    revoked: row.revoked,
+    useCount: row.useCount,
+    lastUsedAt: row.lastUsedAt ? row.lastUsedAt.toISOString() : null,
+    createdAt: row.createdAt.toISOString(),
+    link: `${baseUrl}/team-einladung/${row.token}`,
   };
 }

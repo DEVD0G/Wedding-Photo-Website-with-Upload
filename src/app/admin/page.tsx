@@ -5,7 +5,11 @@ import QRCode from "qrcode";
 import { isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { siteConfig } from "@/lib/config";
-import { getAllMedia, serializeGuestbook } from "@/lib/media";
+import {
+  getAllMedia,
+  serializeGuestbook,
+  serializeInvite,
+} from "@/lib/media";
 import { AdminDashboard } from "@/components/AdminDashboard";
 
 export const dynamic = "force-dynamic";
@@ -15,23 +19,24 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPage() {
-  // Zusaetzliche Absicherung – die Middleware schuetzt bereits den Pfad.
+  // Zusätzliche Absicherung – die Middleware schützt bereits den Pfad.
   if (!isAdmin()) {
     redirect("/admin/login");
   }
 
-  const [media, guestbookRows] = await Promise.all([
-    getAllMedia(),
-    prisma.guestbookEntry.findMany({ orderBy: { createdAt: "desc" } }),
-  ]);
-
-  // Basis-URL aus der aktuellen Anfrage ableiten – so zeigt der QR-Code
-  // immer auf die tatsächlich genutzte Adresse (z. B. die Server-IP),
-  // ganz ohne erneuten Build.
+  // Basis-URL aus der aktuellen Anfrage ableiten – so zeigen QR-Code
+  // und Einladungslinks immer auf die tatsächlich genutzte Adresse.
   const h = headers();
   const host = h.get("host");
   const proto = h.get("x-forwarded-proto")?.split(",")[0].trim() || "http";
   const baseUrl = host ? `${proto}://${host}` : siteConfig.siteUrl;
+
+  const [media, guestbookRows, inviteRows] = await Promise.all([
+    getAllMedia(),
+    prisma.guestbookEntry.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.teamInvite.findMany({ orderBy: { createdAt: "desc" } }),
+  ]);
+
   const qrTarget = `${baseUrl}/upload`;
   let qrDataUrl = "";
   try {
@@ -49,6 +54,7 @@ export default async function AdminPage() {
       <AdminDashboard
         initialMedia={media}
         initialGuestbook={guestbookRows.map(serializeGuestbook)}
+        initialInvites={inviteRows.map((row) => serializeInvite(row, baseUrl))}
         qrDataUrl={qrDataUrl}
         siteUrl={qrTarget}
       />

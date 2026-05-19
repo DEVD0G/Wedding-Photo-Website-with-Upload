@@ -63,3 +63,16 @@ model GuestbookEntry {
 
   @@index([createdAt])
 }
+
+/// Eine Einladung, die einem Teammitglied Admin-Zugriff gewaehrt.
+model TeamInvite {
+  id         String    @id @default(cuid())
+  token      String    @unique // geheimer Teil des Einladungslinks
+  label      String? // Name/Notiz, fuer wen die Einladung ist
+  revoked    Boolean   @default(false)
+  useCount   Int       @default(0)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([createdAt])
+}
