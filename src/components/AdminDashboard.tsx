@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  Clock,
   Copy,
   Download,
   Eye,
@@ -11,18 +12,23 @@ import {
   Heart,
   Image as ImageIcon,
   Link2,
+  Lock,
   LogOut,
   MessageCircle,
+  Mic,
   Pencil,
   Printer,
   QrCode,
   Save,
+  Sparkles,
   Trash2,
   UserPlus,
   X,
 } from "lucide-react";
 import type {
+  CapsuleLetterItem,
   CommentItem,
+  GreetingItem,
   GuestbookItem,
   MediaItem,
   TeamInviteItem,
@@ -33,17 +39,21 @@ interface Props {
   initialMedia: MediaItem[];
   initialGuestbook: GuestbookItem[];
   initialInvites: TeamInviteItem[];
+  initialGreetings: GreetingItem[];
+  initialLetters: CapsuleLetterItem[];
   qrDataUrl: string;
   siteUrl: string;
 }
 
-type Tab = "media" | "guestbook" | "team" | "tools";
+type Tab = "media" | "greetings" | "guestbook" | "capsule" | "team" | "tools";
 type MediaFilter = "all" | "visible" | "hidden" | "image" | "video";
 
 export function AdminDashboard({
   initialMedia,
   initialGuestbook,
   initialInvites,
+  initialGreetings,
+  initialLetters,
   qrDataUrl,
   siteUrl,
 }: Props) {
@@ -51,6 +61,8 @@ export function AdminDashboard({
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [guestbook, setGuestbook] = useState<GuestbookItem[]>(initialGuestbook);
   const [invites, setInvites] = useState<TeamInviteItem[]>(initialInvites);
+  const [greetings, setGreetings] = useState<GreetingItem[]>(initialGreetings);
+  const [letters, setLetters] = useState<CapsuleLetterItem[]>(initialLetters);
   const [filter, setFilter] = useState<MediaFilter>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [comments, setComments] = useState<Record<string, CommentItem[]>>({});
@@ -58,6 +70,9 @@ export function AdminDashboard({
   const [copied, setCopied] = useState(false);
   const [inviteLabel, setInviteLabel] = useState("");
   const [creatingInvite, setCreatingInvite] = useState(false);
+  const [letterAuthor, setLetterAuthor] = useState("");
+  const [letterBody, setLetterBody] = useState("");
+  const [savingLetter, setSavingLetter] = useState(false);
 
   const stats = useMemo(() => {
     const visible = media.filter((m) => m.approved).length;
@@ -65,9 +80,9 @@ export function AdminDashboard({
       total: media.length,
       visible,
       hidden: media.length - visible,
-      likes: media.reduce((sum, m) => sum + m.likeCount, 0),
+      pendingGreetings: greetings.filter((g) => !g.approved).length,
     };
-  }, [media]);
+  }, [media, greetings]);
 
   const filtered = useMemo(() => {
     return media.filter((m) => {
@@ -97,12 +112,10 @@ export function AdminDashboard({
         );
         toast.success(
           item.approved
-            ? "Medium ist jetzt auf der Seite verborgen."
-            : "Medium ist jetzt auf der Seite sichtbar.",
+            ? "Medium ist jetzt verborgen."
+            : "Medium ist jetzt sichtbar.",
         );
-      } else {
-        toast.error("Änderung fehlgeschlagen.");
-      }
+      } else toast.error("Änderung fehlgeschlagen.");
     } catch {
       toast.error("Netzwerkfehler.");
     } finally {
@@ -110,11 +123,7 @@ export function AdminDashboard({
     }
   }
 
-  async function saveEdit(
-    id: string,
-    guestName: string,
-    message: string,
-  ): Promise<boolean> {
+  async function saveEdit(id: string, guestName: string, message: string) {
     try {
       const res = await fetch(`/api/admin/media/${id}`, {
         method: "PATCH",
@@ -142,7 +151,7 @@ export function AdminDashboard({
   }
 
   async function deleteMedia(item: MediaItem) {
-    if (!confirm(`„${item.originalName}“ wirklich endgültig löschen?`)) return;
+    if (!confirm(`„${item.originalName}“ wirklich löschen?`)) return;
     setBusy(item.id);
     try {
       const res = await fetch(`/api/admin/media/${item.id}`, {
@@ -151,11 +160,7 @@ export function AdminDashboard({
       if (res.ok) {
         setMedia((prev) => prev.filter((m) => m.id !== item.id));
         toast.success("Medium gelöscht.");
-      } else {
-        toast.error("Löschen fehlgeschlagen.");
-      }
-    } catch {
-      toast.error("Netzwerkfehler.");
+      } else toast.error("Löschen fehlgeschlagen.");
     } finally {
       setBusy(null);
     }
@@ -200,6 +205,54 @@ export function AdminDashboard({
     }
   }
 
+  /* ---------- Botschaften ---------- */
+
+  async function patchGreeting(id: string, body: Record<string, unknown>) {
+    setBusy(id);
+    try {
+      const res = await fetch(`/api/admin/greetings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setGreetings((prev) =>
+          prev.map((g) =>
+            g.id === id
+              ? {
+                  ...g,
+                  approved: data.approved,
+                  surprise: data.surprise,
+                  revealAt: data.revealAt,
+                }
+              : g,
+          ),
+        );
+      } else toast.error(data.error || "Änderung fehlgeschlagen.");
+    } catch {
+      toast.error("Netzwerkfehler.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function deleteGreeting(g: GreetingItem) {
+    if (!confirm("Diese Botschaft wirklich löschen?")) return;
+    setBusy(g.id);
+    try {
+      const res = await fetch(`/api/admin/greetings/${g.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setGreetings((prev) => prev.filter((x) => x.id !== g.id));
+        toast.success("Botschaft gelöscht.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
   /* ---------- Gästebuch ---------- */
 
   async function deleteGuestbook(id: string) {
@@ -212,6 +265,54 @@ export function AdminDashboard({
       if (res.ok) {
         setGuestbook((prev) => prev.filter((e) => e.id !== id));
         toast.success("Eintrag gelöscht.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /* ---------- Zeitkapsel ---------- */
+
+  async function createLetter(e: React.FormEvent) {
+    e.preventDefault();
+    if (letterBody.trim().length < 2) {
+      toast.error("Bitte schreibe ein paar Worte.");
+      return;
+    }
+    setSavingLetter(true);
+    try {
+      const res = await fetch("/api/admin/capsule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          author: letterAuthor.trim() || "Unbekannt",
+          body: letterBody.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.letter) {
+        setLetters((prev) => [...prev, data.letter]);
+        setLetterAuthor("");
+        setLetterBody("");
+        toast.success("Brief in der Zeitkapsel gespeichert.");
+      } else toast.error(data.error || "Speichern fehlgeschlagen.");
+    } catch {
+      toast.error("Netzwerkfehler.");
+    } finally {
+      setSavingLetter(false);
+    }
+  }
+
+  async function deleteLetter(id: string) {
+    if (!confirm("Diesen Brief löschen?")) return;
+    setBusy(id);
+    try {
+      const res = await fetch(`/api/admin/capsule/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setLetters((prev) => prev.filter((l) => l.id !== id));
+        toast.success("Brief gelöscht.");
       }
     } finally {
       setBusy(null);
@@ -234,9 +335,7 @@ export function AdminDashboard({
         setInvites((prev) => [data.invite, ...prev]);
         setInviteLabel("");
         toast.success("Einladung erstellt – jetzt den Link teilen.");
-      } else {
-        toast.error(data.error || "Einladung konnte nicht erstellt werden.");
-      }
+      } else toast.error(data.error || "Einladung fehlgeschlagen.");
     } catch {
       toast.error("Netzwerkfehler.");
     } finally {
@@ -245,9 +344,7 @@ export function AdminDashboard({
   }
 
   async function revokeInvite(id: string) {
-    if (!confirm("Diese Einladung zurückziehen? Der Link wird ungültig.")) {
-      return;
-    }
+    if (!confirm("Diese Einladung zurückziehen?")) return;
     setBusy(id);
     try {
       const res = await fetch(`/api/admin/team/${id}`, { method: "DELETE" });
@@ -304,7 +401,11 @@ export function AdminDashboard({
         <Stat label="Medien gesamt" value={stats.total} />
         <Stat label="Öffentlich sichtbar" value={stats.visible} tone="gold" />
         <Stat label="Verborgen" value={stats.hidden} tone="rose" />
-        <Stat label="Herzen vergeben" value={stats.likes} />
+        <Stat
+          label="Botschaften offen"
+          value={stats.pendingGreetings}
+          tone="rose"
+        />
       </div>
 
       {/* Tabs */}
@@ -312,7 +413,9 @@ export function AdminDashboard({
         {(
           [
             ["media", "Foto-Verwaltung"],
+            ["greetings", "Botschaften"],
             ["guestbook", "Gästebuch"],
+            ["capsule", "Zeitkapsel"],
             ["team", "Team"],
             ["tools", "QR-Code & Export"],
           ] as [Tab, string][]
@@ -332,10 +435,8 @@ export function AdminDashboard({
         <div className="mt-6">
           <p className="rounded-2xl bg-cream/70 p-4 text-sm text-cocoa">
             Hier <strong>verwaltest und bearbeitest</strong> du alle Fotos und
-            Videos. Grün markierte Medien sind öffentlich sichtbar. Über
-            „Bearbeiten“ lassen sich Gastname und Nachricht anpassen.
+            Videos. Grün markierte Medien sind öffentlich sichtbar.
           </p>
-
           <div className="mt-5 flex flex-wrap gap-2">
             {filterTabs.map(([key, label, count]) => (
               <button
@@ -347,7 +448,6 @@ export function AdminDashboard({
               </button>
             ))}
           </div>
-
           {filtered.length === 0 ? (
             <p className="card mt-5 p-8 text-center text-cocoa">
               Für diese Auswahl sind keine Medien vorhanden.
@@ -366,6 +466,42 @@ export function AdminDashboard({
                   onToggleComments={() => loadComments(item.id)}
                   onDeleteComment={(cid) => deleteComment(item.id, cid)}
                   onSaveEdit={(name, msg) => saveEdit(item.id, name, msg)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ---------- Botschaften ---------- */}
+      {tab === "greetings" && (
+        <div className="mt-6">
+          <p className="rounded-2xl bg-cream/70 p-4 text-sm text-cocoa">
+            Audio- und Video-Botschaften der Gäste. Sie erscheinen erst
+            öffentlich, wenn du sie <strong>freigibst</strong>. Videos lassen
+            sich als zeitgesteuerte <strong>Überraschung</strong> markieren.
+          </p>
+          {greetings.length === 0 ? (
+            <p className="card mt-5 p-8 text-center text-cocoa">
+              Noch keine Botschaften eingegangen.
+            </p>
+          ) : (
+            <div className="mt-5 space-y-3">
+              {greetings.map((g) => (
+                <GreetingAdminCard
+                  key={g.id}
+                  greeting={g}
+                  busy={busy === g.id}
+                  onApprove={() =>
+                    patchGreeting(g.id, { approved: !g.approved })
+                  }
+                  onSurprise={() =>
+                    patchGreeting(g.id, { surprise: !g.surprise })
+                  }
+                  onReveal={(value) =>
+                    patchGreeting(g.id, { revealAt: value })
+                  }
+                  onDelete={() => deleteGreeting(g)}
                 />
               ))}
             </div>
@@ -408,23 +544,91 @@ export function AdminDashboard({
         </div>
       )}
 
+      {/* ---------- Zeitkapsel ---------- */}
+      {tab === "capsule" && (
+        <div className="mt-6">
+          <p className="rounded-2xl bg-cream/70 p-4 text-sm text-cocoa">
+            Briefe an euer Zukunfts-Ich. Sie bleiben für die Gäste{" "}
+            <strong>versiegelt</strong> und werden erst am ersten Hochzeitstag
+            sichtbar.
+          </p>
+          <form onSubmit={createLetter} className="card mt-5 p-5">
+            <div className="grid gap-3">
+              <input
+                type="text"
+                className="field"
+                placeholder="Von wem ist der Brief? (z. B. Leon)"
+                value={letterAuthor}
+                maxLength={60}
+                onChange={(e) => setLetterAuthor(e.target.value)}
+              />
+              <textarea
+                className="field min-h-[140px] resize-y"
+                placeholder="Liebe Worte an unser Zukunfts-Ich …"
+                value={letterBody}
+                maxLength={4000}
+                onChange={(e) => setLetterBody(e.target.value)}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={savingLetter}
+              className="btn-gold mt-4"
+            >
+              <Lock size={15} />
+              {savingLetter ? "Wird versiegelt …" : "Brief versiegeln"}
+            </button>
+          </form>
+
+          <div className="mt-5 space-y-3">
+            {letters.length === 0 && (
+              <p className="card p-8 text-center text-cocoa">
+                Noch keine Briefe in der Zeitkapsel.
+              </p>
+            )}
+            {letters.map((letter) => (
+              <div key={letter.id} className="card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-display text-lg text-ink">
+                      {letter.author}
+                    </p>
+                    <p className="text-xs text-muted">
+                      {formatDateTime(letter.createdAt)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => deleteLetter(letter.id)}
+                    disabled={busy === letter.id}
+                    className="btn shrink-0 px-3 py-2 text-xs text-rosedeep hover:bg-rosedeep/10"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <p className="mt-2 whitespace-pre-line text-sm text-cocoa">
+                  {letter.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ---------- Team ---------- */}
       {tab === "team" && (
         <div className="mt-6">
           <p className="rounded-2xl bg-cream/70 p-4 text-sm text-cocoa">
-            Lade <strong>Teammitglieder</strong> ein, die euch beim Verwalten
-            der Galerie helfen. Jede Einladung erzeugt einen persönlichen Link –
-            wer ihn öffnet, erhält Zugriff auf diesen Admin-Bereich. Einladungen
-            lassen sich jederzeit zurückziehen.
+            Lade <strong>Teammitglieder</strong> ein. Jede Einladung erzeugt
+            einen persönlichen Link, der Admin-Zugriff gewährt.
           </p>
-
           <form
             onSubmit={createInvite}
             className="card mt-5 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
           >
             <div className="flex-1">
               <label className="label" htmlFor="invite-label">
-                Name des Teammitglieds <span className="text-muted">(optional)</span>
+                Name des Teammitglieds{" "}
+                <span className="text-muted">(optional)</span>
               </label>
               <input
                 id="invite-label"
@@ -445,7 +649,6 @@ export function AdminDashboard({
               {creatingInvite ? "Wird erstellt …" : "Einladung erstellen"}
             </button>
           </form>
-
           <div className="mt-5 space-y-3">
             {invites.length === 0 && (
               <p className="card p-8 text-center text-cocoa">
@@ -502,8 +705,7 @@ export function AdminDashboard({
               <QrCode size={22} className="text-gold" /> QR-Code
             </h2>
             <p className="mt-1 text-sm text-cocoa">
-              Drucke diesen Code aus und stelle ihn auf die Tische – die Gäste
-              gelangen damit direkt zur Upload-Seite.
+              Drucke diesen Code aus und stelle ihn auf die Tische.
             </p>
             {qrDataUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
@@ -519,7 +721,10 @@ export function AdminDashboard({
             )}
             <p className="mt-3 break-all text-xs text-muted">{siteUrl}</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <button onClick={copyLink} className="btn-outline px-4 py-2 text-sm">
+              <button
+                onClick={copyLink}
+                className="btn-outline px-4 py-2 text-sm"
+              >
                 <Copy size={15} />
                 {copied ? "Kopiert!" : "Link kopieren"}
               </button>
@@ -532,14 +737,12 @@ export function AdminDashboard({
               </button>
             </div>
           </div>
-
           <div className="card p-6">
             <h2 className="flex items-center gap-2 font-display text-2xl text-ink">
               <Download size={20} className="text-gold" /> Alle Medien sichern
             </h2>
             <p className="mt-1 text-sm text-cocoa">
-              Lade sämtliche hochgeladenen Fotos und Videos gebündelt als
-              ZIP-Archiv herunter – inklusive einer Übersichtsdatei.
+              Lade sämtliche Fotos und Videos als ZIP-Archiv herunter.
             </p>
             <a href="/api/admin/download" className="btn-gold mt-5 w-full">
               <Download size={16} />
@@ -578,6 +781,128 @@ function Stat({
       <p className="mt-0.5 text-xs uppercase tracking-wider text-muted">
         {label}
       </p>
+    </div>
+  );
+}
+
+/* ---------- Botschafts-Karte ---------- */
+
+function GreetingAdminCard({
+  greeting,
+  busy,
+  onApprove,
+  onSurprise,
+  onReveal,
+  onDelete,
+}: {
+  greeting: GreetingItem;
+  busy: boolean;
+  onApprove: () => void;
+  onSurprise: () => void;
+  onReveal: (value: string) => void;
+  onDelete: () => void;
+}) {
+  const fileUrl = `/api/greetings/${greeting.id}/file`;
+
+  return (
+    <div className="card p-4">
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="sm:w-56 sm:shrink-0">
+          {greeting.kind === "video" ? (
+            <video
+              src={`${fileUrl}#t=0.1`}
+              controls
+              preload="metadata"
+              className="aspect-video w-full rounded-2xl bg-noir"
+            />
+          ) : (
+            <div className="flex items-center gap-2 rounded-2xl bg-cream/70 p-3">
+              <Mic size={18} className="shrink-0 text-gold" />
+              <audio src={fileUrl} controls className="min-w-0 flex-1" />
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 rounded-full bg-noir/65 px-2.5 py-1 text-[11px] font-medium text-ivory">
+              {greeting.kind === "video" ? (
+                <Film size={11} />
+              ) : (
+                <Mic size={11} />
+              )}
+              {greeting.kind === "video" ? "Video" : "Audio"}
+            </span>
+            <span
+              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                greeting.approved
+                  ? "bg-gold/20 text-golddeep"
+                  : "bg-rosedeep/15 text-rosedeep"
+              }`}
+            >
+              {greeting.approved ? "Freigegeben" : "Wartet auf Freigabe"}
+            </span>
+          </div>
+          <p className="mt-2 font-display text-lg text-ink">
+            {greeting.guestName || "Unbekannter Gast"}
+          </p>
+          <p className="text-xs text-muted">
+            {formatDateTime(greeting.createdAt)} ·{" "}
+            {formatBytes(greeting.size)}
+          </p>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={onApprove}
+              disabled={busy}
+              className={`btn px-3.5 py-2 text-xs ${
+                greeting.approved
+                  ? "border border-beige text-cocoa hover:bg-sand/70"
+                  : "bg-gradient-to-br from-gold to-golddeep text-ivory shadow-soft"
+              }`}
+            >
+              {greeting.approved ? <EyeOff size={14} /> : <Eye size={14} />}
+              {greeting.approved ? "Verbergen" : "Freigeben"}
+            </button>
+            {greeting.kind === "video" && (
+              <button
+                onClick={onSurprise}
+                disabled={busy}
+                className={`btn px-3.5 py-2 text-xs ${
+                  greeting.surprise
+                    ? "bg-gradient-to-br from-rose to-rosedeep text-ivory shadow-soft"
+                    : "border border-beige text-cocoa hover:bg-sand/70"
+                }`}
+              >
+                <Sparkles size={14} />
+                Überraschung
+              </button>
+            )}
+            <button
+              onClick={onDelete}
+              disabled={busy}
+              className="btn px-3 py-2 text-xs text-rosedeep hover:bg-rosedeep/10"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+
+          {greeting.surprise && (
+            <label className="mt-3 flex items-center gap-2 text-xs text-cocoa">
+              <Clock size={14} className="text-gold" />
+              Sichtbar ab:
+              <input
+                type="datetime-local"
+                defaultValue={
+                  greeting.revealAt ? greeting.revealAt.slice(0, 16) : ""
+                }
+                onChange={(e) => onReveal(e.target.value)}
+                className="field max-w-[15rem] px-2 py-1 text-xs"
+              />
+            </label>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -626,7 +951,6 @@ function MediaAdminCard({
 
   return (
     <div className="card overflow-hidden">
-      {/* Vorschau */}
       <div className="relative aspect-[4/3] bg-sand">
         {item.type === "image" ? (
           /* eslint-disable-next-line @next/next/no-img-element */
@@ -648,12 +972,10 @@ function MediaAdminCard({
             }`}
           />
         )}
-
         <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-noir/65 px-2.5 py-1 text-[11px] font-medium text-ivory backdrop-blur">
           {item.type === "video" ? <Film size={11} /> : <ImageIcon size={11} />}
           {item.type === "video" ? "Video" : "Foto"}
         </span>
-
         <span
           className={`absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-soft ${
             item.approved
@@ -666,7 +988,6 @@ function MediaAdminCard({
         </span>
       </div>
 
-      {/* Infos / Bearbeiten */}
       <div className="p-4">
         {editing ? (
           <div className="space-y-2.5">
@@ -732,7 +1053,6 @@ function MediaAdminCard({
                 „{item.message}“
               </p>
             )}
-
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 onClick={onToggle}
@@ -772,7 +1092,6 @@ function MediaAdminCard({
         )}
       </div>
 
-      {/* Kommentare */}
       {expanded && !editing && (
         <div className="border-t border-beige bg-cream/60 p-4">
           {!comments && <p className="text-sm text-muted">Wird geladen …</p>}

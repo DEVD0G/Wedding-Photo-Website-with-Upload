@@ -5,8 +5,11 @@ import { siteConfig } from "@/lib/config";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SmoothScroll } from "@/components/animation/SmoothScroll";
-import { CinematicLoader } from "@/components/animation/CinematicLoader";
 import { GoldParticlesBackground } from "@/components/animation/GoldParticlesBackground";
+import { CinematicIntro } from "@/components/film/CinematicIntro";
+import { MusicController } from "@/components/film/MusicController";
+import { ScrollProgress } from "@/components/film/ScrollProgress";
+import { FilmGrainOverlay } from "@/components/film/FilmGrainOverlay";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -36,7 +39,7 @@ export const metadata: Metadata = {
     template: `%s · ${siteConfig.projectName}`,
   },
   description:
-    "Eine emotionale Hochzeits-Erlebniswebseite. Lade deine schönsten Fotos und Videos vom Hochzeitstag hoch und teile sie mit uns und unseren Gästen.",
+    "Ein interaktiver Liebesfilm. Erlebe unsere Geschichte, teile deine schönsten Fotos und Videos und werde Teil unseres schönsten Tages.",
   robots: { index: false, follow: false },
 };
 
@@ -57,15 +60,19 @@ export default function RootLayout({
       className={`${display.variable} ${body.variable} ${script.variable}`}
     >
       <body className="font-body">
-        <CinematicLoader />
+        <CinematicIntro />
         <SmoothScroll />
+        <ScrollProgress />
         <GoldParticlesBackground />
+        <FilmGrainOverlay />
 
         <div className="relative z-10 flex min-h-screen flex-col">
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </div>
+
+        <MusicController />
 
         <Toaster
           position="top-center"

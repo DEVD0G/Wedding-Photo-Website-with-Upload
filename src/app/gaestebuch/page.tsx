@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import { serializeGuestbook } from "@/lib/media";
+import { getVisibleGreetings, serializeGuestbook } from "@/lib/media";
 import { GuestbookWall } from "@/components/GuestbookWall";
+import { AudioGuestbook } from "@/components/AudioGuestbook";
 import { AnimatedSectionTitle } from "@/components/animation/AnimatedSectionTitle";
+import { AnimatedFloralLine } from "@/components/animation/AnimatedFloralLine";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function GuestbookPage() {
-  const rows = await prisma.guestbookEntry.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const [rows, audioGreetings] = await Promise.all([
+    prisma.guestbookEntry.findMany({ orderBy: { createdAt: "desc" } }),
+    getVisibleGreetings("audio"),
+  ]);
   const entries = rows.map(serializeGuestbook);
 
   return (
@@ -26,6 +29,17 @@ export default async function GuestbookPage() {
       />
       <div className="mt-12">
         <GuestbookWall initialEntries={entries} />
+      </div>
+
+      <AnimatedFloralLine className="my-16" />
+
+      <AnimatedSectionTitle
+        eyebrow="Hörbare Erinnerungen"
+        title="Audio-Gästebuch"
+        subtitle="Nimm eine Sprachnachricht auf oder lade eine Audiodatei hoch – persönliche Worte zum Hören."
+      />
+      <div className="mt-10">
+        <AudioGuestbook initialGreetings={audioGreetings} />
       </div>
     </div>
   );
