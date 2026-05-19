@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { checkGuestCode, createGuestToken, GUEST_COOKIE } from "@/lib/auth";
+import {
+  checkGuestCode,
+  createGuestToken,
+  GUEST_COOKIE,
+  isSecureRequest,
+} from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +29,7 @@ export async function POST(req: Request) {
   cookies().set(GUEST_COOKIE, createGuestToken(), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecureRequest(req),
     path: "/",
     maxAge: 60 * 60 * 24 * 60,
   });

@@ -1,6 +1,6 @@
 # Petersen Memories
 
-Eine hochwertige, persönliche Hochzeits-Webseite für **Leon & Jessica Petersen**.
+Eine hochwertige, persönliche Hochzeits-Webseite für **Jessica & Leon Petersen**.
 Gäste kommen per QR-Code auf die Seite, laden ihre schönsten Fotos und Videos
 vom Hochzeitstag hoch und teilen sie in einer eleganten Galerie.
 
@@ -138,7 +138,12 @@ npm run start      # startet den Produktionsserver
 Empfehlungen für den Livebetrieb:
 
 - `SESSION_SECRET` und `ADMIN_PASSWORD` auf sichere, lange Werte setzen
-- `NEXT_PUBLIC_SITE_URL` auf die echte Domain setzen (z. B. `https://…`)
+- `NEXT_PUBLIC_SITE_URL` auf die echte Domain bzw. Server-IP setzen
+- Der Server bindet auf `0.0.0.0` und ist damit direkt über die Server-IP
+  erreichbar (z. B. `http://178.105.143.126:3000`). Bei reinem HTTP-Betrieb
+  ohne TLS funktionieren Login und Gäste-Code, da die Cookies das
+  `Secure`-Flag automatisch nur bei HTTPS setzen.
+- Ggf. den Port in der Firewall freigeben: `sudo ufw allow 3000/tcp`
 - Den Ordner aus `UPLOAD_DIR` regelmäßig sichern – dort liegen alle Medien
 - Hinter einem Reverse-Proxy (z. B. nginx) ggf. das Upload-Größenlimit erhöhen
 - Für größere Hochzeiten kann in `prisma/schema.prisma` auf PostgreSQL

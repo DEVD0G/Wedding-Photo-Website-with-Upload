@@ -2,11 +2,11 @@
   "name": "petersen-memories",
   "version": "1.0.0",
   "private": true,
-  "description": "Petersen Memories – die persönliche Hochzeitsgalerie von Leon & Jessica Petersen.",
+  "description": "Petersen Memories – die persönliche Hochzeitsgalerie von Jessica & Leon Petersen.",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",

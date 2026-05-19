@@ -1,4 +1,8 @@
-/** Kleine Helfer fuer die Anzeige im UI. */
+/** Kleine Helfer für die Anzeige im UI. */
+
+// Feste Zeitzone, damit Server und Client identische Datums-Texte
+// erzeugen (verhindert Hydration-Fehler bei abweichender Server-Zeitzone).
+const TIME_ZONE = "Europe/Berlin";
 
 export function formatBytes(bytes: number): string {
   if (!bytes || bytes < 0) return "0 B";
@@ -14,6 +18,7 @@ export function formatDate(input: string | Date): string {
     day: "2-digit",
     month: "long",
     year: "numeric",
+    timeZone: TIME_ZONE,
   }).format(date);
 }
 
@@ -25,10 +30,11 @@ export function formatDateTime(input: string | Date): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: TIME_ZONE,
   }).format(date);
 }
 
-/** "vor 3 Stunden" o.ae. – relative, freundliche Zeitangabe. */
+/** "vor 3 Stunden" o.ä. – relative, freundliche Zeitangabe. */
 export function timeAgo(input: string | Date): string {
   const date = typeof input === "string" ? new Date(input) : input;
   const diff = Date.now() - date.getTime();

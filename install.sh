@@ -52,6 +52,7 @@ if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 command -v sudo >/dev/null 2>&1 || [ "$(id -u)" -eq 0 ] || die "sudo wird benötigt (oder als root ausführen)."
 
 RUN_USER="${SUDO_USER:-$(whoami)}"
+SERVER_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 
 echo
 info "Petersen Memories – Einrichtung wird gestartet"
@@ -94,7 +95,10 @@ else
 
   SESSION_SECRET="$(openssl rand -hex 32)"
   ADMIN_PASSWORD="${PM_ADMIN_PASSWORD:-$(openssl rand -base64 12)}"
-  SITE_URL="${PM_SITE_URL:-$(ask 'Öffentliche URL der Seite' 'http://localhost:3000')}"
+
+  # Primäre IP-Adresse des Servers als Vorschlag verwenden.
+  DEFAULT_URL="http://${SERVER_IP:-localhost}:${APP_PORT}"
+  SITE_URL="${PM_SITE_URL:-$(ask 'Öffentliche URL der Seite' "$DEFAULT_URL")}"
 
   sed -i "s|^SESSION_SECRET=.*|SESSION_SECRET=\"${SESSION_SECRET}\"|" .env
   sed -i "s|^ADMIN_PASSWORD=.*|ADMIN_PASSWORD=\"${ADMIN_PASSWORD}\"|" .env
@@ -126,7 +130,14 @@ info "Produktions-Build wird erstellt …"
 npm run build
 ok "Build erfolgreich"
 
-# ---- 7. Optionaler systemd-Dienst -------------------------
+# ---- 7. Firewall (Port freigeben) -------------------------
+if command -v ufw >/dev/null 2>&1; then
+  info "Firewall: Port ${APP_PORT} wird freigegeben (ufw) …"
+  $SUDO ufw allow "${APP_PORT}/tcp" >/dev/null 2>&1 || true
+  ok "Port ${APP_PORT} in der Firewall freigegeben"
+fi
+
+# ---- 8. Optionaler systemd-Dienst -------------------------
 INSTALL_SERVICE="${PM_INSTALL_SERVICE:-$(ask 'systemd-Dienst einrichten (Autostart)?' 'yes')}"
 
 if [ "$INSTALL_SERVICE" = "yes" ] || [ "$INSTALL_SERVICE" = "y" ]; then
@@ -165,7 +176,7 @@ fi
 echo
 ok "Installation abgeschlossen!"
 echo
-echo -e "${C_INFO}Die Webseite ist erreichbar unter:${C_RST} http://localhost:${APP_PORT}"
+echo -e "${C_INFO}Die Webseite ist erreichbar unter:${C_RST} http://${SERVER_IP:-localhost}:${APP_PORT}"
 echo
 echo "Nützliche Befehle:"
 echo "  npm run dev                    Entwicklungsserver starten"
