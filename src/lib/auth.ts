@@ -91,3 +91,19 @@ export function checkGuestCode(input: string): boolean {
 export function guestCodeEnabled(): boolean {
   return !!(process.env.GUEST_CODE || "");
 }
+
+/**
+ * Ermittelt, ob die Anfrage über HTTPS kam. Wird genutzt, um das
+ * `secure`-Flag der Cookies zu setzen: Bei reinem HTTP-Betrieb (z. B. auf
+ * einer IP-Adresse ohne TLS) würde der Browser `secure`-Cookies sonst
+ * verwerfen und Login/Gäste-Code funktionierten nicht.
+ */
+export function isSecureRequest(req: Request): boolean {
+  const forwarded = req.headers.get("x-forwarded-proto");
+  if (forwarded) return forwarded.split(",")[0].trim() === "https";
+  try {
+    return new URL(req.url).protocol === "https:";
+  } catch {
+    return false;
+  }
+}

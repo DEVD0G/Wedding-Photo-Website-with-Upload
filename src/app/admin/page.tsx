@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -24,7 +25,14 @@ export default async function AdminPage() {
     prisma.guestbookEntry.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
 
-  const qrTarget = `${siteConfig.siteUrl}/upload`;
+  // Basis-URL aus der aktuellen Anfrage ableiten – so zeigt der QR-Code
+  // immer auf die tatsächlich genutzte Adresse (z. B. die Server-IP),
+  // ganz ohne erneuten Build.
+  const h = headers();
+  const host = h.get("host");
+  const proto = h.get("x-forwarded-proto")?.split(",")[0].trim() || "http";
+  const baseUrl = host ? `${proto}://${host}` : siteConfig.siteUrl;
+  const qrTarget = `${baseUrl}/upload`;
   let qrDataUrl = "";
   try {
     qrDataUrl = await QRCode.toDataURL(qrTarget, {
