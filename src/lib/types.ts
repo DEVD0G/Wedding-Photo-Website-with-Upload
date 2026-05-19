@@ -1,0 +1,30 @@
+/** Serialisierbare Typen, die zwischen Server- und Client-Komponenten wandern. */
+
+export interface MediaItem {
+  id: string;
+  type: "image" | "video";
+  originalName: string;
+  mimeType: string;
+  size: number;
+  guestName: string | null;
+  message: string | null;
+  approved: boolean;
+  createdAt: string;
+  likeCount: number;
+  commentCount: number;
+  likedByMe: boolean;
+}
+
+export interface CommentItem {
+  id: string;
+  author: string | null;
+  body: string;
+  createdAt: string;
+}
+
+export interface GuestbookItem {
+  id: string;
+  name: string | null;
+  message: string;
+  createdAt: string;
+}

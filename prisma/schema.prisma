@@ -1,0 +1,65 @@
+// Petersen Memories – Datenbankmodell
+// Doku: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Fuer Produktion kann hier "postgresql" oder "mysql" stehen.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Ein hochgeladenes Foto oder Video eines Gastes.
+model Media {
+  id           String   @id @default(cuid())
+  type         String // "image" oder "video"
+  filename     String   @unique // eindeutiger Dateiname auf der Platte
+  originalName String // Originalname der Datei (fuer den Download)
+  mimeType     String
+  size         Int // Groesse in Bytes
+  guestName    String? // optionaler Name des Gastes
+  message      String? // optionale Nachricht zum Upload
+  approved     Boolean  @default(true) // vom Admin freigegeben / sichtbar
+  createdAt    DateTime @default(now())
+
+  likes    Like[]
+  comments Comment[]
+
+  @@index([createdAt])
+  @@index([approved])
+}
+
+/// Ein Herz/Like eines anonymen Besuchers fuer ein Medium.
+model Like {
+  id        String   @id @default(cuid())
+  mediaId   String
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  visitorId String // anonyme Besucher-ID aus dem Cookie
+  createdAt DateTime @default(now())
+
+  @@unique([mediaId, visitorId])
+}
+
+/// Ein Kommentar zu einem Medium.
+model Comment {
+  id        String   @id @default(cuid())
+  mediaId   String
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  author    String? // optionaler Name
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([mediaId])
+}
+
+/// Ein Eintrag im Gaestebuch.
+model GuestbookEntry {
+  id        String   @id @default(cuid())
+  name      String?
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
