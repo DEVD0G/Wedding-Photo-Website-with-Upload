@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ring: 198 162 75;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-cream text-ink font-body antialiased;
+    background-image:
+      radial-gradient(60rem 60rem at 12% -8%, rgba(239, 208, 203, 0.45), transparent 60%),
+      radial-gradient(50rem 50rem at 110% 8%, rgba(230, 216, 191, 0.55), transparent 55%),
+      radial-gradient(70rem 70rem at 50% 120%, rgba(239, 208, 203, 0.3), transparent 60%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-ink;
+  }
+
+  ::selection {
+    background: rgba(221, 162, 158, 0.4);
+  }
+
+  /* zarter Scrollbalken */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(198, 162, 75, 0.4);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /* ---------- Buttons ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5
+           text-sm font-medium tracking-wide transition-all duration-300
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60
+           focus-visible:ring-offset-2 focus-visible:ring-offset-cream
+           disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-gold {
+    @apply btn bg-gradient-to-br from-gold to-golddeep text-ivory shadow-soft
+           hover:-translate-y-0.5 hover:shadow-glow active:translate-y-0;
+  }
+  .btn-rose {
+    @apply btn bg-gradient-to-br from-rose to-rosedeep text-ivory shadow-soft
+           hover:-translate-y-0.5 hover:shadow-card active:translate-y-0;
+  }
+  .btn-outline {
+    @apply btn border border-gold/50 bg-ivory/70 text-cocoa backdrop-blur
+           hover:-translate-y-0.5 hover:border-gold hover:text-ink hover:shadow-soft;
+  }
+  .btn-ghost {
+    @apply btn text-cocoa hover:bg-sand/70 hover:text-ink;
+  }
+
+  /* ---------- Karten ---------- */
+  .card {
+    @apply rounded-4xl border border-white/60 bg-ivory/80 shadow-soft backdrop-blur-sm;
+  }
+
+  /* ---------- Formularfelder ---------- */
+  .field {
+    @apply w-full rounded-2xl border border-beige bg-ivory/90 px-4 py-3 text-ink
+           placeholder:text-muted/70 transition-all duration-200
+           focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/30;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-cocoa;
+  }
+
+  /* ---------- Chips / Tags ---------- */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-gold/30
+           bg-ivory/80 px-3.5 py-1.5 text-xs font-medium tracking-wide text-cocoa
+           transition-all duration-200;
+  }
+  .chip-active {
+    @apply border-transparent bg-gradient-to-br from-gold to-golddeep text-ivory shadow-soft;
+  }
+
+  /* ---------- Ueberschriften-Schmuck ---------- */
+  .eyebrow {
+    @apply font-body text-xs uppercase tracking-wider2 text-gold;
+  }
+  .script-accent {
+    @apply font-script text-rosedeep;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  /* Lade-Schimmer fuer Platzhalter */
+  .shimmer {
+    background: linear-gradient(
+      100deg,
+      rgba(242, 232, 215, 0.6) 30%,
+      rgba(255, 253, 248, 0.9) 50%,
+      rgba(242, 232, 215, 0.6) 70%
+    );
+    background-size: 960px 100%;
+    @apply animate-shimmer;
+  }
+}

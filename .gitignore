@@ -1,0 +1,26 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# environment
+.env
+.env*.local
+
+# datenbank (Prisma / SQLite)
+/prisma/*.db
+/prisma/*.db-journal
+/prisma/dev.db*
+
+# hochgeladene medien der gaeste (nicht ins repo!)
+/uploads/*
+!/uploads/.gitkeep
+
+# misc
+.DS_Store
+*.log
