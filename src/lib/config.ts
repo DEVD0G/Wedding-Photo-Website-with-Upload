@@ -14,6 +14,9 @@ export const siteConfig = {
   weddingLocation: process.env.NEXT_PUBLIC_WEDDING_LOCATION?.trim() || "",
   /** Pfad/URL zum Hintergrund-Lied (Datei in /public ablegen). */
   musicUrl: process.env.NEXT_PUBLIC_MUSIC_URL?.trim() || "/music.mp3",
+  /** Datum, an dem die Zeitkapsel geöffnet wird (1. Hochzeitstag). */
+  timeCapsuleUnlockISO:
+    process.env.NEXT_PUBLIC_TIME_CAPSULE_UNLOCK?.trim() || "2027-07-31",
   lastName: "Petersen",
   projectName: "Petersen Memories",
 };

@@ -6,6 +6,8 @@ import type {
   CommentItem,
   GuestbookItem,
   TeamInviteItem,
+  GreetingItem,
+  CapsuleLetterItem,
 } from "./types";
 
 /** Liest die anonyme Besucher-ID aus dem Cookie (von der Middleware gesetzt). */
@@ -92,6 +94,71 @@ export function serializeGuestbook(row: {
     id: row.id,
     name: row.name,
     message: row.message,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+type GreetingRow = {
+  id: string;
+  kind: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  guestName: string | null;
+  approved: boolean;
+  surprise: boolean;
+  revealAt: Date | null;
+  createdAt: Date;
+};
+
+export function serializeGreeting(row: GreetingRow): GreetingItem {
+  return {
+    id: row.id,
+    kind: row.kind === "video" ? "video" : "audio",
+    originalName: row.originalName,
+    mimeType: row.mimeType,
+    size: row.size,
+    guestName: row.guestName,
+    approved: row.approved,
+    surprise: row.surprise,
+    revealAt: row.revealAt ? row.revealAt.toISOString() : null,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+/** Sichtbare Botschaften: freigegeben und (falls Überraschung) enthüllt. */
+export async function getVisibleGreetings(
+  kind?: "audio" | "video",
+): Promise<GreetingItem[]> {
+  const now = new Date();
+  const rows = await prisma.greeting.findMany({
+    where: {
+      approved: true,
+      ...(kind ? { kind } : {}),
+      OR: [{ surprise: false }, { surprise: true, revealAt: { lte: now } }],
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(serializeGreeting);
+}
+
+export async function getAllGreetings(): Promise<GreetingItem[]> {
+  const rows = await prisma.greeting.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(serializeGreeting);
+}
+
+export function serializeCapsuleLetter(row: {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: Date;
+}): CapsuleLetterItem {
+  return {
+    id: row.id,
+    author: row.author,
+    body: row.body,
     createdAt: row.createdAt.toISOString(),
   };
 }

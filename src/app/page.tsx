@@ -5,6 +5,7 @@ import { StoryChapter } from "@/components/film/StoryChapter";
 import { LoveReasonCards } from "@/components/film/LoveReasonCards";
 import { BrideSurpriseSection } from "@/components/film/BrideSurpriseSection";
 import { StarrySkySection } from "@/components/film/StarrySkySection";
+import { TimeCapsuleSection } from "@/components/film/TimeCapsuleSection";
 import { ThailandEasterEgg } from "@/components/film/ThailandEasterEgg";
 import { EmotionalFinale } from "@/components/film/EmotionalFinale";
 import { AnimatedFloralLine } from "@/components/animation/AnimatedFloralLine";
@@ -38,6 +39,9 @@ export default function HomePage() {
 
       {/* Digitaler Sternenhimmel */}
       <StarrySkySection />
+
+      {/* Zeitkapsel */}
+      <TimeCapsuleSection />
 
       {/* Thailand-Easter-Egg */}
       <ThailandEasterEgg />

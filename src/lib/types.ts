@@ -29,6 +29,26 @@ export interface GuestbookItem {
   createdAt: string;
 }
 
+export interface GreetingItem {
+  id: string;
+  kind: "audio" | "video";
+  originalName: string;
+  mimeType: string;
+  size: number;
+  guestName: string | null;
+  approved: boolean;
+  surprise: boolean;
+  revealAt: string | null;
+  createdAt: string;
+}
+
+export interface CapsuleLetterItem {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: string;
+}
+
 export interface TeamInviteItem {
   id: string;
   label: string | null;

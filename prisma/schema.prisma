@@ -64,6 +64,35 @@ model GuestbookEntry {
   @@index([createdAt])
 }
 
+/// Eine Audio- oder Video-Botschaft von Gaesten (Sprachmemo / Grußvideo).
+model Greeting {
+  id           String    @id @default(cuid())
+  kind         String // "audio" oder "video"
+  filename     String    @unique
+  originalName String
+  mimeType     String
+  size         Int
+  guestName    String?
+  approved     Boolean   @default(true) // vom Admin freigegeben
+  surprise     Boolean   @default(false) // Ueberraschungsvideo
+  revealAt     DateTime? // ab wann ein Ueberraschungsvideo sichtbar ist
+  createdAt    DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([kind])
+}
+
+/// Ein Brief in der Zeitkapsel – gesperrt bis zum ersten Hochzeitstag.
+model TimeCapsuleLetter {
+  id        String   @id @default(cuid())
+  author    String // wer den Brief geschrieben hat
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
 /// Eine Einladung, die einem Teammitglied Admin-Zugriff gewaehrt.
 model TeamInvite {
   id         String    @id @default(cuid())

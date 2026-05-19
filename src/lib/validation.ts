@@ -86,6 +86,43 @@ function makeType(kind: MediaKind, ext: string): DetectedType {
   return { kind, ext, mimeType: MIME_BY_EXT[ext] };
 }
 
+/**
+ * Erkennt Audioformate (auch im Browser aufgenommene Sprachmemos).
+ * Gibt null zurück, wenn kein bekanntes Audioformat erkannt wird.
+ */
+export function detectAudioType(
+  buf: Buffer,
+): { ext: string; mimeType: string } | null {
+  if (buf.length < 12) return null;
+
+  // MP3 (ID3-Tag oder Frame-Sync)
+  if (ascii(buf, 0, 3) === "ID3") return { ext: "mp3", mimeType: "audio/mpeg" };
+  if (buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0) {
+    return { ext: "mp3", mimeType: "audio/mpeg" };
+  }
+  // WAV
+  if (ascii(buf, 0, 4) === "RIFF" && ascii(buf, 8, 12) === "WAVE") {
+    return { ext: "wav", mimeType: "audio/wav" };
+  }
+  // OGG (Vorbis / Opus)
+  if (ascii(buf, 0, 4) === "OggS") {
+    return { ext: "ogg", mimeType: "audio/ogg" };
+  }
+  // WebM / Matroska – z. B. mit MediaRecorder aufgenommene Audios
+  if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) {
+    return { ext: "weba", mimeType: "audio/webm" };
+  }
+  // ISO Base Media (M4A / mp4-Audio – z. B. von iPhones)
+  if (ascii(buf, 4, 8) === "ftyp") {
+    return { ext: "m4a", mimeType: "audio/mp4" };
+  }
+  return null;
+}
+
+export const AUDIO_ACCEPT_ATTR =
+  "audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4,audio/x-m4a";
+export const VIDEO_ACCEPT_ATTR = "video/mp4,video/quicktime,video/webm";
+
 /** Menschlich lesbare Liste der erlaubten Formate (fuer UI-Texte). */
 export const ALLOWED_FORMATS_LABEL = "JPG, PNG, GIF, WEBP, HEIC, MP4, MOV, WEBM";
 

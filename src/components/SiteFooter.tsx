@@ -1,9 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/config";
 import { AnimatedFloralLine } from "./animation/AnimatedFloralLine";
 import { ScrollReveal } from "./animation/ScrollReveal";
 
 export function SiteFooter() {
+  const pathname = usePathname();
+
+  // Auf der Live-Wand keinen Footer zeigen.
+  if (pathname.startsWith("/wall")) return null;
+
   return (
     <footer className="mt-10 border-t border-white/60 bg-ivory/60 backdrop-blur-sm">
       <div className="mx-auto max-w-6xl px-5 py-14 text-center">
@@ -28,11 +36,17 @@ export function SiteFooter() {
             <Link href="/galerie" className="transition-colors hover:text-ink">
               Galerie
             </Link>
+            <Link href="/botschaften" className="transition-colors hover:text-ink">
+              Botschaften
+            </Link>
             <Link href="/gaestebuch" className="transition-colors hover:text-ink">
               Gästebuch
             </Link>
             <Link href="/slideshow" className="transition-colors hover:text-ink">
               Slideshow
+            </Link>
+            <Link href="/wall" className="transition-colors hover:text-ink">
+              Live-Wand
             </Link>
             <Link href="/admin" className="transition-colors hover:text-ink">
               Admin

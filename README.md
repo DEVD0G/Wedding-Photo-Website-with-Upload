@@ -40,6 +40,15 @@ vom Hochzeitstag hoch und teilen sie in einer eleganten Galerie.
 - **Optionaler Gäste-Code** schützt die ganze Seite
 - Romantische Lade- und Leerzustände, Datenschutz-Hinweis beim Upload,
   sichere Dateiprüfung (Magic Bytes), Mobile-First-Design
+- **Filmisches Storytelling** auf der Startseite: Cinematic Intro,
+  Polaroid-Scroll, sechs Story-Kapitel, „100 Gründe", versteckte
+  Überraschung, Three.js-Sternenhimmel, Zeitkapsel & emotionaler Abschluss
+- **Audio-Gästebuch** (Sprachmemos aufnehmen) auf der Gästebuch-Seite
+- **Video-Botschaften** unter `/botschaften` – mit Admin-Freigabe und
+  zeitgesteuerten Überraschungsvideos
+- **Zeitkapsel**: Briefe ans Zukunfts-Ich, versiegelt bis zum 1. Hochzeitstag
+- **Live-Moment-Wall** unter `/wall` – Fullscreen-Slideshow für Beamer/TV,
+  zeigt neue Uploads automatisch live
 
 ## Technik
 
@@ -130,6 +139,7 @@ Die Seite ist anschließend unter <http://localhost:3000> erreichbar.
 | `NEXT_PUBLIC_WEDDING_DATE_ISO`| Hochzeitsdatum (JJJJ-MM-TT) für Countdowns                         |
 | `NEXT_PUBLIC_WEDDING_LOCATION`| Ort der Hochzeit (optional)                                        |
 | `NEXT_PUBLIC_MUSIC_URL`       | Pfad zum Hintergrund-Lied (Audiodatei in `public/` ablegen)        |
+| `NEXT_PUBLIC_TIME_CAPSULE_UNLOCK`| Öffnungsdatum der Zeitkapsel (JJJJ-MM-TT)                       |
 
 ## Produktivbetrieb
 

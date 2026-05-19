@@ -90,10 +90,10 @@
     @apply rounded-4xl border border-white/60 bg-ivory/80 shadow-soft backdrop-blur-sm;
   }
   .glass {
-    @apply border border-white/55 bg-white/45 shadow-soft backdrop-blur-xl;
+    @apply border border-white/[0.55] bg-white/[0.45] shadow-soft backdrop-blur-xl;
   }
   .glass-dark {
-    @apply border border-white/12 bg-noir/55 shadow-card backdrop-blur-xl;
+    @apply border border-white/[0.12] bg-noir/[0.55] shadow-card backdrop-blur-xl;
   }
 
   /* ---------- Formularfelder ---------- */

@@ -12,6 +12,7 @@ const NAV = [
   { href: "/", label: "Start" },
   { href: "/upload", label: "Hochladen" },
   { href: "/galerie", label: "Galerie" },
+  { href: "/botschaften", label: "Botschaften" },
   { href: "/gaestebuch", label: "Gästebuch" },
   { href: "/slideshow", label: "Slideshow" },
 ];
@@ -30,7 +31,10 @@ export function SiteHeader() {
 
   useEffect(() => setOpen(false), [pathname]);
 
-  if (pathname.startsWith("/admin")) return null;
+  // Header im Admin-Bereich und auf der Live-Wand ausblenden.
+  if (pathname.startsWith("/admin") || pathname.startsWith("/wall")) {
+    return null;
+  }
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);

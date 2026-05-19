@@ -22,8 +22,10 @@ export function MusicController() {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  // Im Admin-Bereich und auf der Live-Wall keinen Musik-Schalter zeigen.
-  if (pathname.startsWith("/admin")) return null;
+  // Im Admin-Bereich und auf der Live-Wand keinen Musik-Schalter zeigen.
+  if (pathname.startsWith("/admin") || pathname.startsWith("/wall")) {
+    return null;
+  }
 
   async function toggle() {
     const audio = audioRef.current;
