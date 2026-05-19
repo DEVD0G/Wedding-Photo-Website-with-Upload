@@ -4,7 +4,7 @@
  */
 
 export const siteConfig = {
-  coupleNames: process.env.NEXT_PUBLIC_COUPLE_NAMES?.trim() || "Leon & Jessica",
+  coupleNames: process.env.NEXT_PUBLIC_COUPLE_NAMES?.trim() || "Jessica & Leon",
   siteUrl: (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/$/, ""),
   weddingDate: process.env.NEXT_PUBLIC_WEDDING_DATE?.trim() || "",
   lastName: "Petersen",

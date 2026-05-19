@@ -1,6 +1,6 @@
 # Petersen Memories
 
-Eine hochwertige, persönliche Hochzeits-Webseite für **Leon & Jessica Petersen**.
+Eine hochwertige, persönliche Hochzeits-Webseite für **Jessica & Leon Petersen**.
 Gäste kommen per QR-Code auf die Seite, laden ihre schönsten Fotos und Videos
 vom Hochzeitstag hoch und teilen sie in einer eleganten Galerie.
 
