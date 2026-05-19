@@ -159,9 +159,10 @@ export function AnimatedHero() {
         </motion.div>
       </motion.div>
 
-      {/* Scroll-Hinweis */}
+      {/* Scroll-Hinweis (auf dem Handy ausgeblendet, um die Buttons
+          nicht zu überdecken) */}
       <motion.div
-        className="absolute bottom-7 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-muted"
+        className="absolute bottom-7 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 text-muted sm:flex"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2 }}
