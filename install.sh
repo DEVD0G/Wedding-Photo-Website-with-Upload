@@ -69,9 +69,11 @@ ok "Grundpakete installiert (git, curl, openssl, build-essential …)"
 NEED_NODE="yes"
 if command -v node >/dev/null 2>&1; then
   CURRENT_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
-  if [ "$CURRENT_MAJOR" -ge 18 ]; then
+  if [ "$CURRENT_MAJOR" -ge 20 ]; then
     NEED_NODE="no"
     ok "Node.js ist bereits vorhanden ($(node -v))"
+  else
+    info "Vorhandene Node.js-Version ($(node -v 2>/dev/null || echo unbekannt)) ist zu alt – Node ${NODE_MAJOR} wird installiert."
   fi
 fi
 
